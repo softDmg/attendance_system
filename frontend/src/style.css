@@ -1,0 +1,261 @@
+/* Login Interface*/
+body{
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.title{
+    text-align: center;
+    border-radius: 4px;
+    color: white;
+    border-bottom: 5px solid darkred;
+    background-color: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: white;
+}
+
+
+
+#form{
+    width: 300px;
+    margin: 20vh auto 0 auto;
+    padding: 20px;
+    background-color: whitesmoke;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+#form h1{
+    color: #0f2027;
+    text-align: center;
+}
+
+#form button{
+    padding: 10px;
+    margin-top: 10px;
+    width: 100%;
+    color: white;
+    background-color: darkred;
+    border: none;
+}
+
+.profile-control{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 10px;
+    margin-left: 10%;
+    padding: 10px;
+}
+
+.input-control {
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+}
+
+.input-control input:focus{
+    outline: 0;
+}
+
+.input-control.success input{
+    border-color: #09c372;
+}
+
+.input-control.error input{
+    border-color: #ff3860;
+}
+
+.input-control .error{
+    color: #ff3860;
+    font-weight: bold;
+    height: 5px;
+}
+
+
+/* Profesor Page */
+#bodyprof{
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    font-family: Arial, Helvetica, sans-serif;
+    color: white;
+}
+
+.contents{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+}
+
+
+.child-content{
+    flex : 1;
+    margin: 0 5px;
+}
+
+.child-content img{
+    width: 100%;
+    height: auto;
+}
+
+.prof-details{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    border: 1px solid white;
+    height: 60px;
+    padding-top: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+#prof-header {
+    padding: 10px;
+  }
+  
+  #prof-header .navbar {
+    display: flex;
+    justify-content: left;
+    align-items: left;
+  }
+  
+  #prof-header button {
+    background-color: #0f2027;
+    color: white;
+    padding: 10px 70px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 15px;
+    margin-left: 15px;
+    margin-top: 15px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+
+  }
+  
+  #prof-header button:hover {
+    background-color: #203a43;
+  }
+#prof-footer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    border: 1px solid white;
+    height: 50px;
+    margin-top: 130px;
+}
+
+#prof-footer button {
+    background-color: #0f2027;
+    color: white;
+    padding: 10px 50px;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    margin-right: 15px;
+    margin-left: 15px;
+    transition: background-color 0.3s;
+
+  }
+  #prof-footer button:hover {
+    background-color: #203a43;
+  }
+
+div.div-demo{
+    margin-top: 20px;
+    margin-bottom: 5px;
+    margin-left: 10px;
+    padding: 2px;
+    display: table;
+    border: 1px solid gray;
+    flex-direction: row;
+    width: 97%;
+    height: 40px;
+    font-size: 18px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+div.div-demo span{
+    text-align: center;
+    display: table-cell;
+    
+}
+
+#course-select{
+    width: 500px;
+    height: 25px;
+    font-size: 18px;
+}
+
+#start-time{
+    height: 25px;
+    width: 250px;
+    text-align: right;
+}
+
+#accepted-delay{
+    height: 25px;
+    width: 100px;
+    text-align: right;
+}
+
+#academic-year{
+    height: 25px;
+    width: 200px;
+    text-align: right;
+}
+
+/* Table */
+.child-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2px;
+  }
+  
+  .child-content th,
+  .child-content td {
+    padding: 10px;
+    text-align: center;
+    /* border-bottom: 1px solid #ddd; */
+  }
+  
+  .child-content th {
+    background-color: #0f2027;
+  }
+  
+  #report-footer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    border: 1px solid white;
+    height: 50px;
+    margin-top: 130px;
+}
+#report-footer button {
+    background-color: #0f2027;
+    color: white;
+    padding: 10px 50px;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    margin-right: 20px;
+    margin-left: 1000px;
+    transition: background-color 0.3s;
+
+
+  }
+#report-footer label{ 
+    font-size: 18px;
+    margin-right: 100px;
+    color: white;
+    text-align: 'center';
+  }
+  #report-footer button:hover {
+    background-color: #203a43;
+  }
