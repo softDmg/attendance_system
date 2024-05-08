@@ -1,7 +1,8 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import emptyclass from '../images/empty_class.jpg';
+import Webcam from 'react-webcam';
 
 export default function ProfessorPage() {
   const navigate = useNavigate(); 
@@ -9,6 +10,9 @@ export default function ProfessorPage() {
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [studentData, setStudentData] = useState([]);
+  const webcamRef = useRef(null);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [showCamera, setShowCamera] = useState(false);
 
   useEffect(() => {
     const loggedInProfessor = localStorage.getItem('loggedInProfessor');
@@ -61,6 +65,29 @@ export default function ProfessorPage() {
 
   function handleReportButtonClick() {
     navigate('/report');
+  }
+  function handleCheckOnSiteButtonClick() {
+    // Open a new window
+    const cameraWindow = window.open('', 'Camera', 'width=640,height=480');
+  
+    // Create the necessary HTML elements
+    const videoElement = document.createElement('video');
+    videoElement.setAttribute('width', '640');
+    videoElement.setAttribute('height', '480');
+    cameraWindow.document.body.appendChild(videoElement);
+  
+    // Add an event listener for the user interaction
+    cameraWindow.document.addEventListener('click', function() {
+      // Access the user's camera and display the video feed
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+          videoElement.srcObject = stream;
+          videoElement.play();
+        })
+        .catch(function(error) {
+          console.error('Error accessing camera:', error);
+        });
+    });
   }
 
   return (
@@ -130,7 +157,7 @@ export default function ProfessorPage() {
       </div>
       <footer id="prof-footer">
         <div className="navbar">
-          <button>Check On-Site</button>
+          <button onClick={handleCheckOnSiteButtonClick}>Check On-Site</button>
           <button>Stop On-Site</button>
           <button>Check Zoom Sessions</button>
           <button>Check Teams Sessions</button>

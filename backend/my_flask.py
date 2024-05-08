@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from face import recognize_faces
 import requests
 import logging
 import traceback
@@ -122,6 +123,19 @@ def get_students(course):
         traceback.print_exc()
         app.logger.error("An error occurred: {}".format(str(e)))
         return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
+
+@app.route('/recognize', methods=['POST'])
+def recognize():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image file provided'})
+
+    image = request.files['image']
+    image_path = f'{UNKNOWN_FACES_DIR}/{image.filename}'
+    image.save(image_path)
+
+    face_names = recognize_faces(image_path)
+
+    return jsonify({'face_names': face_names})
 
 if __name__ == "__main__":
     app.run(debug=True)
