@@ -27,6 +27,7 @@ export default function Homepage() {
         } else if (role === 'student') {
           navigate('/student_index.html'); // Navigate to admin_index.html
         } else if (role === 'professor') {
+          localStorage.setItem('loggedInProfessor', username);
           navigate('/professor'); // Navigate to professor page
         }
       } else {
