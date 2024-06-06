@@ -140,5 +140,28 @@ def start_face_recognition():
         app.logger.error("An error occurred: {}".format(str(e)))
         return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
 
+
+@app.route('/update_delay_time', methods=['POST'])
+def update_delay_time():
+    try:
+        data = request.json
+        student_name = data.get('student_name')
+        delay_time = data.get('delay_time')
+
+        connection = database()
+        cursor = connection.cursor()
+
+        # Update delay time for the student
+        cursor.execute("UPDATE attendance SET delay_time = %s WHERE full_name = %s", (delay_time, student_name))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({'message': 'Delay time updated successfully'}), 200
+    except Exception as e:
+        app.logger.error("An error occurred: {}".format(str(e)))
+        return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)

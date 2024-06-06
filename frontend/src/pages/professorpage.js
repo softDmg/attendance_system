@@ -122,6 +122,36 @@ export default function ProfessorPage() {
       return [];
     }
   };
+
+  const handleDelayTimeChange = async (event, index) => {
+    const selectedStudent = studentData[index];
+    const updatedStudent = { ...selectedStudent, delayTime: event.target.value };
+  
+    try {
+      const response = await fetch('http://127.0.0.1:5000/update_delay_time', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          student_name: selectedStudent.name,
+          delay_time: event.target.value
+        })
+      });
+  
+      if (response.ok) {
+        // Update the studentData state with the updated student
+        const updatedStudentData = [...studentData];
+        updatedStudentData[index] = updatedStudent;
+        setStudentData(updatedStudentData);
+      } else {
+        alert('Failed to update delay time');
+      }
+    } catch (error) {
+      console.error('Error updating delay time:', error);
+      alert('An error occurred while updating delay time.');
+    }
+  };   
   
   return (
     <div>
@@ -180,7 +210,16 @@ export default function ProfessorPage() {
                   <tr key={index}>
                     <td>{student.name}</td>
                     <td>{student.programName}</td>
-                    <td>{student.delayTime}</td> {/* Display the delay_time here */}
+                    <td>
+                      {/* {student.delayTime} */}
+                      <select value={student.delayTime} onChange={(e) => handleDelayTimeChange(e, index)}>
+                        <option value="Absent">Absent</option>
+                        <option value="ontime">OnTime</option>
+                        <option value="late">Late</option>
+                      </select>
+                    
+                    
+                    </td> {/* Display the delay_time here */}
                   </tr>
                 ))}
               </tbody>
