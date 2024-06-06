@@ -1,8 +1,7 @@
 import React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import emptyclass from '../images/empty_class.jpg';
-import Webcam from 'react-webcam';
 
 export default function ProfessorPage() {
   const navigate = useNavigate(); 
@@ -10,9 +9,8 @@ export default function ProfessorPage() {
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [studentData, setStudentData] = useState([]);
-  const webcamRef = useRef(null);
-  const [capturedImage, setCapturedImage] = useState(null);
-  const [showCamera, setShowCamera] = useState(false);
+  const [startTime, setStartTime] = useState('');  
+  const [acceptedDelay, setAcceptedDelay] = useState('');  
 
   useEffect(() => {
     const loggedInProfessor = localStorage.getItem('loggedInProfessor');
@@ -66,30 +64,65 @@ export default function ProfessorPage() {
   function handleReportButtonClick() {
     navigate('/report');
   }
-  function handleCheckOnSiteButtonClick() {
-    // Open a new window
-    const cameraWindow = window.open('', 'Camera', 'width=640,height=480');
-  
-    // Create the necessary HTML elements
-    const videoElement = document.createElement('video');
-    videoElement.setAttribute('width', '640');
-    videoElement.setAttribute('height', '480');
-    cameraWindow.document.body.appendChild(videoElement);
-  
-    // Add an event listener for the user interaction
-    cameraWindow.document.addEventListener('click', function() {
-      // Access the user's camera and display the video feed
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-          videoElement.srcObject = stream;
-          videoElement.play();
-        })
-        .catch(function(error) {
-          console.error('Error accessing camera:', error);
-        });
-    });
-  }
+ 
+  const handleStartTimeChange = (event) => {
+    setStartTime(event.target.value);
+  };
 
+  const handleAcceptedDelayChange = (event) => {
+    setAcceptedDelay(event.target.value);
+  };
+
+
+  const handleFaceRecognition = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/start_face_recognition', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ start_time: startTime, accepted_delay: acceptedDelay })
+      });
+  
+      if (response.ok) {
+        alert('Face recognition started');
+  
+        // Fetch updated student data
+        const updatedStudentData = await fetchUpdatedStudentData(selectedCourse);
+        setStudentData(updatedStudentData);
+      } else {
+        alert('Failed to start face recognition');
+      }
+    } catch (error) {
+      console.error('Error during face recognition:', error);
+      alert('An error occurred during face recognition.');
+    }
+  };
+  
+  const fetchUpdatedStudentData = async (course) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/students/${course}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        return data.students;
+      } else {
+        console.error('Error fetching updated student data:', response.statusText);
+        alert('An error occurred while fetching updated student data.');
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching updated student data:', error);
+      alert('An error occurred while fetching updated student data.');
+      return [];
+    }
+  };
+  
   return (
     <div>
       <header id="prof-header">
@@ -122,11 +155,11 @@ export default function ProfessorPage() {
         </ul>
         <span>
           <label htmlFor="start-time" id='start-time' style={{color: 'white'}}>Start Time : </label>
-          <input type="time" defaultValue="00:00" id="start-time" placeholder="" />
+          <input type="time" name= "start-time" id="start-time" value={startTime} onChange={handleStartTimeChange} required />
         </span>
         <span>
           <label htmlFor="accepted-delay" style={{color: 'white'}}>Accepted Delay : </label>
-          <input type="number" min="0" id="accepted-delay" max="15" placeholder="0" />
+          <input type="number" name= "accepted-delay" id="accepted-delay" value={acceptedDelay} onChange={handleAcceptedDelayChange} required />
         </span>
       </div>
       <div className="contents">
@@ -147,7 +180,7 @@ export default function ProfessorPage() {
                   <tr key={index}>
                     <td>{student.name}</td>
                     <td>{student.programName}</td>
-                    <td>{student.delayTime}</td>
+                    <td>{student.delayTime}</td> {/* Display the delay_time here */}
                   </tr>
                 ))}
               </tbody>
@@ -157,7 +190,7 @@ export default function ProfessorPage() {
       </div>
       <footer id="prof-footer">
         <div className="navbar">
-          <button onClick={handleCheckOnSiteButtonClick}>Check On-Site</button>
+          <button onClick={handleFaceRecognition} className='btn btn-primary'>Check On-Site</button>
           <button>Stop On-Site</button>
           <button>Check Zoom Sessions</button>
           <button>Check Teams Sessions</button>

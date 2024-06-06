@@ -1,39 +1,52 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from face import recognize_faces
-import requests
+import mysql.connector
 import logging
 import traceback
+import subprocess
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-broker_url = "https://attendanceapi-i0pn.onrender.com/MySQLBroker"
+def database():
+    return mysql.connector.connect(
+        host="na424056-001.eu.clouddb.ovh.net",
+        user="innov-app1",
+        password="Ryr50IUfFm07",
+        database="StudentAttendance",
+        port=35700
+    )
 
 def authenticate_user(username, password, role):
-    if role not in ['admin', 'professor', 'student']:
-        return False, 'Invalid role'
+    try:
+        connection = database()
+        cursor = connection.cursor()
 
-    req = ""
-    if role == 'admin':
-        req = "SELECT * FROM admin WHERE Name = '{}' AND Password = '{}'".format(username, password)
-    elif role == 'professor':
-        req = "SELECT * FROM professors WHERE Name = '{}' AND Password = '{}'".format(username, password)
-    elif role == 'student':
-        req = "SELECT * FROM student WHERE Name = '{}' AND Password = '{}'".format(username, password)
+        if role not in ['admin', 'professor', 'student']:
+            return False, 'Invalid role'
 
-    mysql_data = {'mysql_command': req, 'is_write': False}
-    response = requests.post(broker_url, json=mysql_data)
-    response_data = response.json()
+        req = ""
+        if role == 'admin':
+            req = "SELECT * FROM admin WHERE Name = %s AND Password = %s"
+        elif role == 'professor':
+            req = "SELECT * FROM professors WHERE Name = %s AND Password = %s"
+        elif role == 'student':
+            req = "SELECT * FROM student WHERE Name = %s AND Password = %s"
 
-    if "result" in response_data:
-        result = response_data["result"]
+        cursor.execute(req, (username, password))
+        result = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
         if result:
             return True, 'User Login Successful'
         else:
             return False, 'User Login Failed'
-    else:
-        return False, 'Error occurred: No result found in response'
+
+    except Exception as e:
+        return False, 'Error occurred: {}'.format(str(e))
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -57,85 +70,75 @@ def get_courses(professor):
     try:
         app.logger.info("Retrieving courses for professor: {}".format(professor))
         
-        # Query the database to retrieve the courses for the professor
-        req = "SELECT Course FROM courses WHERE Professor = '{}'".format(professor)
-        app.logger.info("MySQL request: {}".format(req))
+        connection = database()
+        cursor = connection.cursor()
         
-        mysql_data = {'mysql_command': req, 'is_write': False}
-        response = requests.post(broker_url, json=mysql_data)
-        response_data = response.json()
+        req = "SELECT Course FROM courses WHERE Professor = %s"
+        cursor.execute(req, (professor,))
+        result = cursor.fetchall()
         
-        app.logger.info("Response data from MySQL broker: {}".format(response_data))
+        cursor.close()
+        connection.close()
 
-        if "result" in response_data:
-            result = response_data["result"]
-            app.logger.info("Result structure: {}".format(result))
-            
-            if isinstance(result, list):
-                # Extract the course names from the result and return them as a list
-                if len(result) > 0 and isinstance(result[0], list) and len(result[0]) > 0:
-                    courses = [row[0] for row in result]
-                    return jsonify({'courses': courses}), 200
-                else:
-                    return jsonify({'message': 'No courses found for the professor'}), 404
-            else:
-                return jsonify({'message': 'Error occurred: Invalid response format'}), 500
+        if result:
+            courses = [row[0] for row in result]
+            return jsonify({'courses': courses}), 200
         else:
-            return jsonify({'message': 'Error occurred: No result found in response'}), 500
+            return jsonify({'message': 'No courses found for the professor'}), 404
     except Exception as e:
         traceback.print_exc()
         app.logger.error("An error occurred: {}".format(str(e)))
         return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
-    
+
 @app.route('/students/<course>', methods=['GET'])
 def get_students(course):
     try:
         app.logger.info("Retrieving students for course: {}".format(course))
 
-        # Query the database to retrieve the students for the course
+        connection = database()
+        cursor = connection.cursor()
+
         req = """
-        SELECT s.Name, s.ProgramName 
+        SELECT s.Name, s.ProgramName, a.delay_time
         FROM `students 2022-2023` s 
         INNER JOIN courses c ON s.ProgramName = c.ProgramName 
-        WHERE c.Course = '{}'
-        """.format(course)
-        app.logger.info("MySQL request: {}".format(req))
+        LEFT JOIN attendance a ON s.Name = a.full_name
+        WHERE c.Course = %s
+        """
+        cursor.execute(req, (course,))
+        result = cursor.fetchall()
 
-        mysql_data = {'mysql_command': req, 'is_write': False}
-        response = requests.post(broker_url, json=mysql_data)
-        response_data = response.json()
+        cursor.close()
+        connection.close()
 
-        app.logger.info("Response data from MySQL broker: {}".format(response_data))
-
-        if "result" in response_data:
-            result = response_data["result"]
-            app.logger.info("Result structure: {}".format(result))
-
-            if isinstance(result, list):
-                # Extract the student data from the result and return them as a list of dictionaries
-                students = [{'name': row[0], 'programName': row[1]} for row in result]
-                return jsonify({'students': students}), 200
-            else:
-                return jsonify({'message': 'Error occurred: Invalid response format'}), 500
+        if result:
+            students = [{'name': row[0], 'programName': row[1], 'delayTime': row[2]} for row in result]
+            return jsonify({'students': students}), 200
         else:
-            return jsonify({'message': 'Error occurred: No result found in response'}), 500
+            return jsonify({'message': 'No students found for the course'}), 404
     except Exception as e:
         traceback.print_exc()
         app.logger.error("An error occurred: {}".format(str(e)))
         return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
 
-@app.route('/recognize', methods=['POST'])
-def recognize():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image file provided'})
+@app.route('/start_face_recognition', methods=['POST'])
+def start_face_recognition():
+    try:
+        data = request.json
+        app.logger.info(f"Received payload: {data}")
+        start_time = data.get('start_time')
+        accepted_delay = data.get('accepted_delay')
 
-    image = request.files['image']
-    image_path = f'{UNKNOWN_FACES_DIR}/{image.filename}'
-    image.save(image_path)
+        if not start_time or not accepted_delay:
+            app.logger.error("Missing start_time or accepted_delay in the payload")
+            return jsonify({'message': 'Start time and accepted delay are required'}), 400
 
-    face_names = recognize_faces(image_path)
+        subprocess.Popen(['python', 'face.py', start_time, str(accepted_delay)], cwd=os.path.dirname(__file__))
 
-    return jsonify({'face_names': face_names})
+        return jsonify({'message': 'Face recognition started'}), 200
+    except Exception as e:
+        app.logger.error("An error occurred: {}".format(str(e)))
+        return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

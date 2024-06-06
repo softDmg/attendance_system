@@ -23,7 +23,7 @@ export default function Homepage() {
       if (response.ok) {
         const responseData = await response.json();
         if (role === 'admin') {
-          navigate('/admin_index.html');
+          navigate('/admin');
         } else if (role === 'student') {
           navigate('/student_index.html'); // Navigate to admin_index.html
         } else if (role === 'professor') {

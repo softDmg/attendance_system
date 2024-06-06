@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import emptyclass from '../images/empty_class.jpg';
+// import emptyclass from '../images/empty_class.jpg';
 
 export default function ProfessorPage() {
   const navigate = useNavigate();
