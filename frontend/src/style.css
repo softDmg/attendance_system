@@ -110,16 +110,24 @@ body{
     margin-bottom: 20px;
     font-size: 20px;
 }
-#prof-header {
+  #prof-header {
     padding: 10px;
   }
   
-  #prof-header .navbar {
+  .navbar {
     display: flex;
-    justify-content: left;
+    justify-content: space-between;
     align-items: left;
   }
   
+  #prof-header .left-buttons {
+    display: flex;
+  }
+  
+  #prof-header .right-buttons {
+    display: flex;
+  }
+
   #prof-header button {
     background-color: #0f2027;
     color: white;
@@ -138,6 +146,8 @@ body{
   #prof-header button:hover {
     background-color: #203a43;
   }
+  
+
 #prof-footer {
     display: flex;
     flex-direction: row;
@@ -190,6 +200,13 @@ div.div-demo span{
     height: 25px;
     font-size: 18px;
 }
+
+#academic-select{
+  width: 230px;
+  height: 30px;
+  font-size: 18px;
+}
+
 
 #start-time{
     height: 25px;

@@ -64,6 +64,12 @@ export default function ProfessorPage() {
   function handleReportButtonClick() {
     navigate('/report');
   }
+  function handleLogout() {
+    // Clear the local storage and navigate to the login page
+    localStorage.removeItem('loggedInProfessor');
+    navigate('/');
+
+  }
  
   const handleStartTimeChange = (event) => {
     setStartTime(event.target.value);
@@ -157,10 +163,16 @@ export default function ProfessorPage() {
     <div>
       <header id="prof-header">
         <div className="navbar">
-          <button onClick={handleSessionButtonClick}>Session</button>
-          <button onClick={handleReportButtonClick}>Report</button>
+          <div className="left-buttons">
+            <button onClick={handleSessionButtonClick}>Session</button>
+            <button onClick={handleReportButtonClick}>Report</button>
+          </div>
+          <div className="right-buttons">
+            <button onClick={handleLogout}>Log Out</button>
+          </div>
         </div>
       </header>
+
       <div className="div-demo">
         <ul style={{lifestyleType: 'none', listStyle: 'none', padding: '0'}}>
           <li style={{marginBottom: '10px'}}>

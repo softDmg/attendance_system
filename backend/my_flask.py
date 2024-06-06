@@ -121,6 +121,20 @@ def get_students(course):
         app.logger.error("An error occurred: {}".format(str(e)))
         return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
 
+@app.route('/students', methods=['GET'])
+def get_all_students():
+    try:
+        connection = database()
+        cursor = connection.cursor()
+        cursor.execute("SELECT Name FROM `students 2022-2023`")
+        students = [{'Name': row[0]} for row in cursor.fetchall()]
+        cursor.close()
+        connection.close()
+        return jsonify({'students': students}), 200
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
+
 @app.route('/start_face_recognition', methods=['POST'])
 def start_face_recognition():
     try:
@@ -139,7 +153,6 @@ def start_face_recognition():
     except Exception as e:
         app.logger.error("An error occurred: {}".format(str(e)))
         return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
-
 
 @app.route('/update_delay_time', methods=['POST'])
 def update_delay_time():
@@ -161,6 +174,35 @@ def update_delay_time():
         return jsonify({'message': 'Delay time updated successfully'}), 200
     except Exception as e:
         app.logger.error("An error occurred: {}".format(str(e)))
+        return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
+
+@app.route('/logs/<academic_year>', methods=['GET'])
+def get_logs(academic_year):
+    try:
+        student_name = request.args.get('student')
+        course_name = request.args.get('course')
+        connection = database()
+        cursor = connection.cursor()
+        table_name = f'logs {academic_year}'
+        
+        query = f"SELECT name, class_date, class_name, status, score, comment FROM `{table_name}` WHERE 1=1"
+        params = []
+
+        if student_name and academic_year in ['2021-2022', '2022-2023', '2023-2024']:
+            query += " AND name = %s"
+            params.append(student_name)
+        
+        if course_name != 'all':
+            query += " AND class_name = %s"
+            params.append(course_name)
+        
+        cursor.execute(query, params)
+        logs = [{'name': row[0], 'class_date': row[1], 'class_name': row[2], 'status': row[3], 'score': row[4], 'comment': row[5]} for row in cursor.fetchall()]
+        cursor.close()
+        connection.close()
+        return jsonify({'logs': logs}), 200
+    except Exception as e:
+        traceback.print_exc()
         return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
 
 if __name__ == "__main__":
