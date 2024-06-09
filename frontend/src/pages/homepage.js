@@ -25,7 +25,7 @@ export default function Homepage() {
         if (role === 'admin') {
           navigate('/admin');
         } else if (role === 'student') {
-          navigate('/student_index.html'); // Navigate to admin_index.html
+          navigate('/student'); // Navigate to admin_index.html
         } else if (role === 'professor') {
           localStorage.setItem('loggedInProfessor', username);
           navigate('/professor'); // Navigate to professor page

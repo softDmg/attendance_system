@@ -10,19 +10,24 @@ export default function ReportPage() {
   const [academicYear, setAcademicYear] = useState('');
   const [selectedStudent, setSelectedStudent] = useState('all');
   const [selectedCourse, setSelectedCourse] = useState('all');
+  const [statistics, setStatistics] = useState({
+    sessions: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+    totalScore: 0,
+  });
 
   useEffect(() => {
     const loggedInProfessor = localStorage.getItem('loggedInProfessor');
     if (loggedInProfessor) {
       setProfessorName(loggedInProfessor);
 
-      // Fetch courses for the professor
       fetch(`http://127.0.0.1:5000/courses/${loggedInProfessor}`)
         .then(response => response.json())
         .then(data => setCourses(data.courses))
         .catch(error => alert('An error occurred while fetching courses.'));
 
-      // Fetch all students
       fetch('http://127.0.0.1:5000/students')
         .then(response => response.json())
         .then(data => setStudents(data.students))
@@ -58,6 +63,26 @@ export default function ReportPage() {
     }
   }, [academicYear, selectedStudent, selectedCourse]);
 
+  useEffect(() => {
+    const calculateStatistics = () => {
+      const sessions = studentData.length;
+      const present = studentData.filter(entry => entry.status === 'Present').length;
+      const absent = studentData.filter(entry => entry.status === 'Absent').length;
+      const late = studentData.filter(entry => entry.status === 'Late').length;
+      const totalScore = studentData.reduce((acc, entry) => acc + entry.score, 0);
+
+      setStatistics({
+        sessions,
+        present,
+        absent,
+        late,
+        totalScore,
+      });
+    };
+
+    calculateStatistics();
+  }, [studentData]);
+
   const handleLogout = () => {
     localStorage.removeItem('loggedInProfessor');
     navigate('/');
@@ -82,10 +107,7 @@ export default function ReportPage() {
           <li style={{ marginBottom: '10px' }}>
             <label htmlFor="user" style={{ color: 'white' }}>User: {professorName}</label>
           </li>
-          <li style={{ marginBottom: '10px' }}>
-            <label htmlFor="start-time">Date: </label>
-            <input type="date" id="start-time" />
-          </li>
+          
           <li style={{ marginBottom: '10px', color: 'white' }}>
             <label htmlFor="student-list">Student List: </label>
             <select
@@ -124,7 +146,7 @@ export default function ReportPage() {
               value={academicYear}
               onChange={(e) => {
                 setAcademicYear(e.target.value);
-                setSelectedStudent('all'); // Reset student selection when changing academic year
+                setSelectedStudent('all'); 
               }}
             >
               <option value="">Select Academic Year</option>
@@ -140,23 +162,17 @@ export default function ReportPage() {
         <table>
           <thead>
             <tr>
-              <th>Student's Name</th>
               <th>Date</th>
-              <th>Course</th>
               <th>Status</th>
               <th>Score</th>
-              <th>Comment</th>
             </tr>
           </thead>
           <tbody>
             {studentData.map((student, index) => (
               <tr key={index}>
-                <td>{student.name}</td>
                 <td>{student.class_date}</td>
-                <td>{student.class_name}</td>
                 <td>{student.status}</td>
                 <td>{student.score}</td>
-                <td>{student.comment}</td>
               </tr>
             ))}
           </tbody>
@@ -165,10 +181,12 @@ export default function ReportPage() {
 
       <footer id="report-footer">
         <div className="navbar">
-          <label>Attendance number:</label>
-          <label>Absence Number:</label>
-          <label>Number of Sessions:</label>
-          <button>More</button>
+          <label>Number of Sessions: {statistics.sessions}</label>
+          <label>Present: {statistics.present}</label>
+          <label>Late: {statistics.late}</label>
+          <label>Absent: {statistics.absent}</label>
+          <label>Total Score: {statistics.totalScore}</label>
+          <button>Download Report</button>
         </div>
       </footer>
     </div>

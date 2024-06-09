@@ -213,7 +213,7 @@ export default function ProfessorPage() {
               <thead>
                 <tr>
                   <th>Student Name</th>
-                  <th>Program Name</th>
+                  
                   <th>Delay Time</th>
                 </tr>
               </thead>
@@ -221,9 +221,9 @@ export default function ProfessorPage() {
                 {studentData.map((student, index) => (
                   <tr key={index}>
                     <td>{student.name}</td>
-                    <td>{student.programName}</td>
+                    
                     <td>
-                      {/* {student.delayTime} */}
+                      
                       <select value={student.delayTime} onChange={(e) => handleDelayTimeChange(e, index)}>
                         <option value="Absent">Absent</option>
                         <option value="ontime">OnTime</option>
@@ -231,7 +231,7 @@ export default function ProfessorPage() {
                       </select>
                     
                     
-                    </td> {/* Display the delay_time here */}
+                    </td> 
                   </tr>
                 ))}
               </tbody>

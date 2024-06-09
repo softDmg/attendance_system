@@ -176,6 +176,27 @@ def update_delay_time():
         app.logger.error("An error occurred: {}".format(str(e)))
         return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
 
+
+@app.route('/academic_years', methods=['GET'])
+def get_academic_years():
+    try:
+        connection = database()
+        cursor = connection.cursor()
+
+        # Fetch academic years from your logs tables
+        cursor.execute("SHOW TABLES LIKE 'logs%'")
+        tables = cursor.fetchall()
+        academic_years = [table[0].split()[-1] for table in tables]
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({'academicYears': academic_years}), 200
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
+
+
 @app.route('/logs/<academic_year>', methods=['GET'])
 def get_logs(academic_year):
     try:
@@ -204,6 +225,29 @@ def get_logs(academic_year):
     except Exception as e:
         traceback.print_exc()
         return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
+
+
+@app.route('/student/<studentName>', methods=['GET'])
+def get_student_details(studentName):
+    try:
+        connection = database()
+        cursor = connection.cursor()
+
+        # Fetch student details from the student table
+        cursor.execute("SELECT Name, `Student Number` FROM student WHERE Name = %s", (studentName,))
+        student_details = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        if student_details:
+            return jsonify({'name': student_details[0], 'studentNumber': student_details[1]}), 200
+        else:
+            return jsonify({'message': 'Student not found'}), 404
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'message': 'Error occurred', 'error': str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
