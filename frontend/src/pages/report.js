@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { saveAs } from 'file-saver';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { Document, Packer, Paragraph, Table, TableCell, TableRow } from 'docx';
 
 export default function ReportPage() {
   const navigate = useNavigate();
@@ -17,6 +21,128 @@ export default function ReportPage() {
     late: 0,
     totalScore: 0,
   });
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add professor's details
+    doc.setFontSize(12);
+    doc.text(`Professor: ${professorName}`, 10, 10);
+  
+    // Add academic year, selected student, selected course
+    doc.text(`Academic Year: ${academicYear}`, 10, 20);
+    doc.text(`Selected Student: ${selectedStudent}`, 10, 30);
+    doc.text(`Selected Course: ${selectedCourse}`, 10, 40);
+  
+    // Add table
+    doc.autoTable({
+      startY: 50,
+      head: [['Date', 'Status', 'Score']],
+      body: studentData.map(entry => [entry.class_date, entry.status, entry.score]),
+    });
+  
+    // Add statistics
+    doc.autoTable({
+      startY: doc.autoTable.previous.finalY + 10, // Adjust startY to avoid overlap
+      head: [['Number of Sessions', 'Present', 'Late', 'Absent', 'Total Score']],
+      body: [[statistics.sessions, statistics.present, statistics.late, statistics.absent, statistics.totalScore]],
+    });
+  
+    // Save PDF
+    doc.save('report.pdf');
+  };
+
+  const downloadCSV = () => {
+    const csvData = studentData.map(entry => ({
+      Date: entry.class_date,
+      Status: entry.status,
+      Score: entry.score,
+    }));
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + "Date,Status,Score\n"
+      + csvData.map(e => `${e.Date},${e.Status},${e.Score}`).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    saveAs(encodedUri, 'report.csv');
+  };
+
+  const downloadWord = () => {
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: [
+            new Paragraph(`Professor: ${professorName}`),
+            new Paragraph(`Academic Year: ${academicYear}`),
+            new Paragraph(`Selected Student: ${selectedStudent}`),
+            new Paragraph(`Selected Course: ${selectedCourse}`),
+            new Table({
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({ children: [new Paragraph("Date")] }),
+                    new TableCell({ children: [new Paragraph("Status")] }),
+                    new TableCell({ children: [new Paragraph("Score")] }),
+                  ],
+                }),
+                ...studentData.map(entry =>
+                  new TableRow({
+                    children: [
+                      new TableCell({ children: [new Paragraph(entry.class_date)] }),
+                      new TableCell({ children: [new Paragraph(entry.status)] }),
+                      new TableCell({ children: [new Paragraph(entry.score.toString())] }),
+                    ],
+                  })
+                ),
+              ],
+            }),
+            new Table({
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({ children: [new Paragraph("Number of Sessions")] }),
+                    new TableCell({ children: [new Paragraph("Present")] }),
+                    new TableCell({ children: [new Paragraph("Late")] }),
+                    new TableCell({ children: [new Paragraph("Absent")] }),
+                    new TableCell({ children: [new Paragraph("Total Score")] }),
+                  ],
+                }),
+                new TableRow({
+                  children: [
+                    new TableCell({ children: [new Paragraph(statistics.sessions.toString())] }),
+                    new TableCell({ children: [new Paragraph(statistics.present.toString())] }),
+                    new TableCell({ children: [new Paragraph(statistics.late.toString())] }),
+                    new TableCell({ children: [new Paragraph(statistics.absent.toString())] }),
+                    new TableCell({ children: [new Paragraph(statistics.totalScore.toString())] }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        },
+      ],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, 'report.docx');
+    });
+  };
+
+  const handleDownload = (format) => {
+    switch (format) {
+      case 'pdf':
+        downloadPDF();
+        break;
+      case 'csv':
+        downloadCSV();
+        break;
+      case 'word':
+        downloadWord();
+        break;
+      default:
+        break;
+    }
+  };
 
   useEffect(() => {
     const loggedInProfessor = localStorage.getItem('loggedInProfessor');
@@ -39,7 +165,7 @@ export default function ReportPage() {
     const fetchLogs = () => {
       let url = `http://127.0.0.1:5000/logs/${academicYear}`;
       const params = [];
-      
+
       if (selectedStudent !== 'all') {
         params.push(`student=${selectedStudent}`);
       }
@@ -186,7 +312,9 @@ export default function ReportPage() {
           <label>Late: {statistics.late}</label>
           <label>Absent: {statistics.absent}</label>
           <label>Total Score: {statistics.totalScore}</label>
-          <button>Download Report</button>
+          <button onClick={() => handleDownload('pdf')}>Download PDF</button>
+          <button onClick={() => handleDownload('word')}>Download Word</button>
+          <button onClick={() => handleDownload('csv')}>Download CSV</button>
         </div>
       </footer>
     </div>

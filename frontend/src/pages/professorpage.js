@@ -3,6 +3,7 @@ import { useState, useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import emptyclass from '../images/empty_class.jpg';
 
+
 export default function ProfessorPage() {
   const navigate = useNavigate(); 
   const [professorName, setProfessorName] = useState('');
@@ -226,7 +227,7 @@ export default function ProfessorPage() {
                       
                       <select value={student.delayTime} onChange={(e) => handleDelayTimeChange(e, index)}>
                         <option value="Absent">Absent</option>
-                        <option value="ontime">OnTime</option>
+                        <option value="present">Present</option>
                         <option value="late">Late</option>
                       </select>
                     

@@ -31,7 +31,7 @@ def log_attendance(full_name, start_time, accepted_delay):
         start_datetime = datetime.combine(today, start_time)
         delay_timedelta = timedelta(minutes=accepted_delay)  # Convert accepted delay to timedelta
         end_time_with_delay = start_datetime + delay_timedelta  # Add timedelta to start time
-        delay_status = "ontime" if current_time <= end_time_with_delay else "late"  # Compare with current time
+        delay_status = "present" if current_time <= end_time_with_delay else "late"  # Compare with current time
         cursor.execute("INSERT INTO attendance (full_name, time, delay_time) VALUES (%s, %s, %s)",
                        (full_name, current_time, delay_status))
         connection.commit()
