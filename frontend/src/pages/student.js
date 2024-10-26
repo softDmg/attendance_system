@@ -1,51 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { saveAs } from 'file-saver';
+import logo from '../images/iconN.png';  
 
 export default function Student() {
   const navigate = useNavigate();
-  const [studentName, setStudentName] = useState('');
-  const [studentNumber, setStudentNumber] = useState('');
+  const [studentDetails, setStudentDetails] = useState({
+    name: '',
+    number: '',
+    image: ''
+  });
   const [courses, setCourses] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [studentData, setStudentData] = useState([]);
-  const [academicYear, setAcademicYear] = useState('');
   const [academicYears, setAcademicYears] = useState([]);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('all');
+  const [studentData, setStudentData] = useState([]);
+  const [statistics, setStatistics] = useState({
+    sessions: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+    totalScore: 0,
+  });
 
   useEffect(() => {
     const loggedInStudent = localStorage.getItem('loggedInStudent');
-    console.log('loggedInStudent:', loggedInStudent);
     if (loggedInStudent) {
       fetchStudentDetails(loggedInStudent);
-      //   setStudentName(loggedInStudent);
       fetchCourses();
       fetchAcademicYears();
     }
   }, []);
-  
-
 
   useEffect(() => {
-    if (academicYear) {
+    if (selectedAcademicYear) {
       fetchLogs();
     }
-  }, [academicYear, selectedCourse]);
+  }, [selectedAcademicYear, selectedCourse]);
 
   const fetchStudentDetails = (studentName) => {
     fetch(`http://127.0.0.1:5000/student/${studentName}`)
-      .then(response => response.json())
-      .then(data => {
-        setStudentName(data.name);
-        setStudentNumber(data.studentNumber);
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch student details');
+        return response.json();
       })
-      .catch(() => alert('An error occurred while fetching student details.'));
+      .then(data => {
+        setStudentDetails({
+          name: data.name,
+          number: data.studentNumber,
+          image: `http://127.0.0.1:5000/faces/${data.imageFilename}`
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching student details:', error);
+        alert('An error occurred while fetching student details.');
+      });
   };
 
   const fetchCourses = () => {
-    fetch('http://127.0.0.1:5000/courses')
-      .then(response => response.json())
+    fetch('http://127.0.0.1:5000/course')
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch courses');
+        return response.json();
+      })
       .then(data => setCourses(data.courses))
-      .catch(() => alert('An error occurred while fetching courses.'));
+      .catch(error => {
+        console.error('Error fetching courses:', error);
+        alert('An error occurred while fetching courses.');
+      });
   };
 
   const fetchAcademicYears = () => {
@@ -56,21 +80,63 @@ export default function Student() {
   };
 
   const fetchLogs = () => {
-    let url = `http://127.0.0.1:5000/logs/${academicYear}`;
-    const params = [];
-
-    if (selectedCourse !== 'all') {
-      params.push(`course=${selectedCourse}`);
-    }
-
-    if (params.length > 0) {
-      url += '?' + params.join('&');
-    }
+    let url = `http://127.0.0.1:5000/logs/${selectedAcademicYear}`;
+    const params = selectedCourse !== 'all' ? [`course=${selectedCourse}`] : [];
+    if (params.length) url += `?${params.join('&')}`;
 
     fetch(url)
       .then(response => response.json())
-      .then(data => setStudentData(data.logs))
+      .then(data => {
+        setStudentData(data.logs);
+        calculateStatistics(data.logs);
+      })
       .catch(() => alert('An error occurred while fetching logs.'));
+  };
+
+  const calculateStatistics = (data) => {
+    const sessions = data.length;
+    const present = data.filter(entry => entry.status === 'Present').length;
+    const absent = data.filter(entry => entry.status === 'Absent').length;
+    const late = data.filter(entry => entry.status === 'Late').length;
+    const totalScore = data.reduce((acc, entry) => acc + entry.score, 0);
+
+    setStatistics({
+      sessions,
+      present,
+      absent,
+      late,
+      totalScore,
+    });
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    
+  
+    doc.setFontSize(12);
+    doc.text(`Student: ${studentDetails.name}`, 10, 10);
+    doc.text(`Student Number: ${studentDetails.number}`, 10, 20);
+  
+    // Add academic year, selected course
+    doc.text(`Academic Year: ${selectedAcademicYear}`, 10, 30);
+    doc.text(`Selected Course: ${selectedCourse}`, 10, 40);
+  
+    // Add table
+    doc.autoTable({
+      startY: 50,
+      head: [['Date', 'Status', 'Score']],
+      body: studentData.map(entry => [entry.class_date, entry.status, entry.score]),
+    });
+  
+    // Add statistics
+    doc.autoTable({
+      startY: doc.autoTable.previous.finalY + 10,
+      head: [['Number of Sessions', 'Present', 'Late', 'Absent', 'Total Score']],
+      body: [[statistics.sessions, statistics.present, statistics.late, statistics.absent, statistics.totalScore]],
+    });
+  
+    // Save PDF
+    doc.save('report.pdf');
   };
 
   const handleLogout = () => {
@@ -86,25 +152,18 @@ export default function Student() {
 
   return (
     <div>
-      <header id="prof-header">
-        <div className="right-buttons">
-          <button onClick={handleLogout}>Log Out</button>
+        <button className="studentlogout" onClick={handleLogout}>Log Out</button>
+        <div className="student-header">
+          
         </div>
-      </header>
       <div className="student-info">
-        <label>Student Name: {studentName} </label>
-    
-        <label>Student Number: {studentNumber}</label>
-
+        <label>Student Name: {studentDetails.name}</label>
+        <label>Student Number: {studentDetails.number}</label>
         <div className="student-picture-frame">
-          {students.length > 0 && students[0]?.pictureUrl ? (
-            <img src={students[0].pictureUrl} alt="Student" />
-          ) : (
-            <div className="placeholder">No Image Available</div>
-          )}
+          <img src={logo} alt="Studentlogo" />
         </div>
         <label>Academic Year:</label>
-        <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)}>
+        <select value={selectedAcademicYear} onChange={(e) => setSelectedAcademicYear(e.target.value)}>
           <option value="">Select Academic Year</option>
           {academicYears.map(year => (
             <option key={year} value={year}>{year}</option>
@@ -118,10 +177,10 @@ export default function Student() {
           ))}
         </select>
         <div className="buttons">
-          <button onClick={() => alert('Download report feature is not implemented yet.')}>Download Report</button>
+          <button onClick={downloadPDF}>Download Report</button>
           <button onClick={handleCheckSchedule}>Check Schedule</button>
         </div>
       </div>
     </div>
   );
-} 
+}

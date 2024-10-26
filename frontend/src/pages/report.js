@@ -25,11 +25,11 @@ export default function ReportPage() {
   const downloadPDF = () => {
     const doc = new jsPDF();
     
-    // Add professor's details
+    
     doc.setFontSize(12);
     doc.text(`Professor: ${professorName}`, 10, 10);
   
-    // Add academic year, selected student, selected course
+    
     doc.text(`Academic Year: ${academicYear}`, 10, 20);
     doc.text(`Selected Student: ${selectedStudent}`, 10, 30);
     doc.text(`Selected Course: ${selectedCourse}`, 10, 40);
@@ -43,7 +43,7 @@ export default function ReportPage() {
   
     // Add statistics
     doc.autoTable({
-      startY: doc.autoTable.previous.finalY + 10, // Adjust startY to avoid overlap
+      startY: doc.autoTable.previous.finalY + 10, 
       head: [['Number of Sessions', 'Present', 'Late', 'Absent', 'Total Score']],
       body: [[statistics.sessions, statistics.present, statistics.late, statistics.absent, statistics.totalScore]],
     });

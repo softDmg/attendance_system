@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../style.css';
-
+import upec from '../images/app.jpg';
+import logo from '../images/logo.jpg';
+import videobg from '../videos/vid1.mp4';
 
 export default function Homepage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('admin'); // Default role
-  const navigate = useNavigate(); // Access the navigate function from useNavigate
+  const [role, setRole] = useState('admin'); 
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevent default form submission
+    event.preventDefault(); 
 
     try {
       const response = await fetch('http://127.0.0.1:5000/login', {
@@ -22,22 +24,23 @@ export default function Homepage() {
       });
 
       if (response.ok) {
-        const responseData = await response.json();
+
         if (role === 'admin') {
           navigate('/admin');
         } else if (role === 'student') {
-          navigate('/student'); // Navigate to admin_index.html
+          localStorage.setItem('loggedInStudent', username);
+          navigate('/student'); 
         } else if (role === 'professor') {
           localStorage.setItem('loggedInProfessor', username);
-          navigate('/professor'); // Navigate to professor page
+          navigate('/professor'); 
         }
       } else {
-        // Login failed
+        
         alert('Login Failed');
       }
     } catch (error) {
       console.error('Error during login:', error);
-      // Handle error gracefully
+      
       alert('An error occurred during login.');
     }
   };
@@ -52,14 +55,19 @@ export default function Homepage() {
 
   const handleRoleChange = (event) => {
     const selectedRole = event.target.value;
-    setRole(selectedRole); // Update role state with the selected role
+    setRole(selectedRole); 
   };
 
   return (
     <div className='container'>
+      <video src={videobg} autoPlay loop muted />
       <form id='form' onSubmit={handleSubmit}>
         <div className='title'>
-          <h1 id='title'>UPEC Attendance System</h1>
+          <img src={logo} alt='logo' className='logo-image'/>
+          <h1 id='title'> UPEC Attendance System </h1>
+        </div>
+        <div className='upec'>
+          <img src={upec} alt='upec' />
         </div>
         <h1>Login</h1>
         <div className='input-control'>
@@ -124,6 +132,9 @@ export default function Homepage() {
           </button>
         </div>
       </form>
+      <footer className='home-footer'>
+        © 2020 by Master of Biometrics and Intelligent Vision. Copyright.
+      </footer>
     </div>
   );
 }
